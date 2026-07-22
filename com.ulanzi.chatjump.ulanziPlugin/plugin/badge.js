@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { PNG } from 'pngjs';
 import jpeg from 'jpeg-js';
 import { GifReader } from 'omggif';
+import { BADGE_PNG_BASE64 } from './badges-data.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const MAX_DIM = 256; // deck keys are small; bound work and output size
@@ -146,8 +147,9 @@ function compositeOver(base, top, ox, oy) {
 
 function loadBadge(app) {
   if (BADGE_CACHE[app]) return BADGE_CACHE[app];
-  const file = path.join(HERE, '..', 'assets', 'icons', `badge-${app}.png`);
-  const png = PNG.sync.read(readFileSync(file));
+  const b64 = BADGE_PNG_BASE64[app];
+  if (!b64) return null;
+  const png = PNG.sync.read(Buffer.from(b64, 'base64'));
   BADGE_CACHE[app] = { width: png.width, height: png.height, data: png.data };
   return BADGE_CACHE[app];
 }
@@ -176,7 +178,9 @@ export function composeIconDataUri(photoPath, app) {
   const short = Math.min(base.width, base.height);
   const size = Math.max(16, Math.round(short * BADGE_SCALE));
   const margin = Math.round(short * BADGE_MARGIN);
-  const badge = resizeRGBA(loadBadge(app), size, size);
+  const badgeSrc = loadBadge(app);
+  if (!badgeSrc) return null;
+  const badge = resizeRGBA(badgeSrc, size, size);
   // bottom-right corner
   compositeOver(base, badge, base.width - size - margin, base.height - size - margin);
 

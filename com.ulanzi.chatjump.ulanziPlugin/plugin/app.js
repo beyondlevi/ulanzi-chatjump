@@ -91,7 +91,8 @@ class ChatContact {
       if (dataUri) {
         this.$UD.setBaseDataIcon(this.context, dataUri, label);
       } else {
-        // Undecodable photo (e.g. gif): show it as-is, without the badge.
+        // Couldn't build a badged icon (undecodable photo): show it as-is.
+        this.$UD.logMessage(`ChatJump: no badge for ${this.app} (photo=${this.settings.iconPath}); showing plain photo`, 'info');
         this.$UD.setPathIcon(this.context, this.settings.iconPath, label);
       }
     } else {
