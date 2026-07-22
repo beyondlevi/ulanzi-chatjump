@@ -34,7 +34,7 @@ $UD.onSelectdialog((jsn) => {
 
 // Telegram credentials + session live in global settings (shared by all keys).
 $UD.onDidReceiveGlobalSettings((jsn) => {
-  const gs = (jsn && (jsn.param || jsn.payload)) || {};
+  const gs = (jsn && (jsn.settings || jsn.payload || jsn.param)) || {};
   setVal('tg-apiid', gs.tgApiId);
   setVal('tg-apihash', gs.tgApiHash);
   setVal('tg-phone', gs.tgPhone);

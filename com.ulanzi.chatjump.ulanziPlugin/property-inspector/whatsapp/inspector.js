@@ -38,7 +38,7 @@ $UD.onSelectdialog((jsn) => {
 
 // Evolution config lives in global settings (shared by all ChatJump keys).
 $UD.onDidReceiveGlobalSettings((jsn) => {
-  const gs = (jsn && (jsn.param || jsn.payload)) || {};
+  const gs = (jsn && (jsn.settings || jsn.payload || jsn.param)) || {};
   setVal('evo-server', gs.evoServer);
   setVal('evo-key', gs.evoKey);
   setVal('evo-instance', gs.evoInstance);
