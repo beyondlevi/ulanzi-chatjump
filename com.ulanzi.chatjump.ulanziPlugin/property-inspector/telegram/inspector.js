@@ -3,6 +3,7 @@ const ACTION_UUID = 'com.ulanzi.ulanzistudio.chatjump.telegram';
 let form;
 let tgDialogs = [];
 let tgSession = '';
+let allGlobal = {}; // full global-settings object (shared with the WhatsApp inspector)
 
 $UD.connect(ACTION_UUID);
 
@@ -34,11 +35,11 @@ $UD.onSelectdialog((jsn) => {
 
 // Telegram credentials + session live in global settings (shared by all keys).
 $UD.onDidReceiveGlobalSettings((jsn) => {
-  const gs = (jsn && (jsn.settings || jsn.payload || jsn.param)) || {};
-  setVal('tg-apiid', gs.tgApiId);
-  setVal('tg-apihash', gs.tgApiHash);
-  setVal('tg-phone', gs.tgPhone);
-  tgSession = gs.tgSession || '';
+  allGlobal = (jsn && (jsn.settings || jsn.payload || jsn.param)) || {};
+  setVal('tg-apiid', allGlobal.tgApiId);
+  setVal('tg-apihash', allGlobal.tgApiHash);
+  setVal('tg-phone', allGlobal.tgPhone);
+  tgSession = allGlobal.tgSession || '';
 });
 
 // Replies from the main service.
@@ -103,7 +104,9 @@ function tgConfig() {
 }
 
 function saveGlobal() {
-  $UD.setGlobalSettings({ tgApiId: val('tg-apiid'), tgApiHash: val('tg-apihash'), tgPhone: val('tg-phone'), tgSession: tgSession });
+  // merge into the shared global object so we don't wipe the WhatsApp keys
+  allGlobal = { ...allGlobal, tgApiId: val('tg-apiid'), tgApiHash: val('tg-apihash'), tgPhone: val('tg-phone'), tgSession: tgSession };
+  $UD.setGlobalSettings(allGlobal);
 }
 
 function showImport(on) {

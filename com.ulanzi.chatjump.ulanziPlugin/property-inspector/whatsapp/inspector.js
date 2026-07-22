@@ -2,6 +2,7 @@ const ACTION_UUID = 'com.ulanzi.ulanzistudio.chatjump.whatsapp';
 
 let form;
 let evoContacts = [];
+let allGlobal = {}; // full global-settings object (shared with the Telegram inspector)
 
 $UD.connect(ACTION_UUID);
 
@@ -38,10 +39,10 @@ $UD.onSelectdialog((jsn) => {
 
 // Evolution config lives in global settings (shared by all ChatJump keys).
 $UD.onDidReceiveGlobalSettings((jsn) => {
-  const gs = (jsn && (jsn.settings || jsn.payload || jsn.param)) || {};
-  setVal('evo-server', gs.evoServer);
-  setVal('evo-key', gs.evoKey);
-  setVal('evo-instance', gs.evoInstance);
+  allGlobal = (jsn && (jsn.settings || jsn.payload || jsn.param)) || {};
+  setVal('evo-server', allGlobal.evoServer);
+  setVal('evo-key', allGlobal.evoKey);
+  setVal('evo-instance', allGlobal.evoInstance);
 });
 
 // Results coming back from the main service.
@@ -84,7 +85,9 @@ function evoConfig() {
 }
 
 function saveGlobal() {
-  $UD.setGlobalSettings({ evoServer: val('evo-server'), evoKey: val('evo-key'), evoInstance: val('evo-instance') });
+  // merge into the shared global object so we don't wipe the Telegram keys
+  allGlobal = { ...allGlobal, evoServer: val('evo-server'), evoKey: val('evo-key'), evoInstance: val('evo-instance') };
+  $UD.setGlobalSettings(allGlobal);
 }
 
 function renderContacts(query) {
