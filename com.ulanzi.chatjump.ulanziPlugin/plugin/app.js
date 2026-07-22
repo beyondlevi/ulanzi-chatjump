@@ -23,7 +23,7 @@ import { UlanziApi } from './plugin-common-node/index.js';
 import { composeIconDataUri } from './badge.js';
 
 const MAIN_UUID = 'com.ulanzi.ulanzistudio.chatjump';
-const VERSION = '1.0.1';
+const VERSION = '1.0.2';
 
 const $UD = new UlanziApi();
 const ACTION_CACHES = {};
