@@ -13,6 +13,18 @@
     "Open by": "Abrir por",
     "Username": "Nome de usuario",
     "Group invite link": "Link de convite do grupo",
+    "Import from WhatsApp (Evolution API)": "Importar do WhatsApp (Evolution API)",
+    "Server URL": "URL do servidor",
+    "API Key": "Chave da API",
+    "Instance": "Instancia",
+    "Test connection": "Testar conexao",
+    "Import contact": "Importar contato",
+    "Search contacts...": "Buscar contatos...",
+    "Testing...": "Testando...",
+    "Loading contacts...": "Carregando contatos...",
+    "Fetching...": "Buscando",
+    "Imported": "Importado",
+    "no photo": "sem foto",
     "Enter the number in international format (with country code). WhatsApp Desktop or WhatsApp must be installed.": "Informe o numero no formato internacional (com codigo do pais). O WhatsApp Desktop ou WhatsApp precisa estar instalado.",
     "Username opens public users, groups and channels (@name). Phone works only for contacts already in your Telegram. Group invite link (https://t.me/+...) opens a private group you already belong to. Telegram Desktop must be installed.": "O nome de usuario abre usuarios, grupos e canais publicos (@nome). O telefone funciona apenas para contatos ja salvos no seu Telegram. O link de convite do grupo (https://t.me/+...) abre um grupo privado do qual voce ja faz parte. O Telegram Desktop precisa estar instalado."
   }

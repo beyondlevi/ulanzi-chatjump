@@ -21,8 +21,28 @@ showing the contact's photo and name on the key.
 - **Contact photo + app badge** — set any photo as the key icon; a small
   WhatsApp/Telegram badge is added to the corner so you always know which app the
   key opens.
+- **Import from WhatsApp (Evolution API)** — connect your
+  [Evolution API](https://doc.evolution-api.com/) server to search your WhatsApp
+  contacts and import a contact's number and profile photo into a key with one
+  click.
 - **Bilingual** — interface localized in **English** and **Portuguese (pt_PT)**.
 - Opens the messenger app directly via its URL scheme (not a browser tab).
+
+## Import contacts from WhatsApp (Evolution API)
+
+In a **WhatsApp Chat** key's settings, open **Import from WhatsApp (Evolution
+API)** and fill in your Evolution server URL, API key and instance (stored once,
+shared by every ChatJump key). Then:
+
+1. **Test connection** confirms the server/key/instance are valid.
+2. **Import contact** lists your WhatsApp contacts with a search box.
+3. Pick a contact — its **name**, **number** and **profile photo** (with the
+   WhatsApp badge) are filled into the key automatically.
+
+Calls run in the plugin's background service (async, never blocking) using
+`POST /chat/findContacts/{instance}` and `POST /chat/fetchProfilePictureUrl/{instance}`
+with the `apikey` header. The API key is stored in Ulanzi Studio's local
+settings.
 
 ## How it works
 

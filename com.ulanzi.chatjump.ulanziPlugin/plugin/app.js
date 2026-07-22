@@ -21,6 +21,7 @@
 import { spawn } from 'node:child_process';
 import { UlanziApi } from './plugin-common-node/index.js';
 import { composeIconDataUri } from './badge.js';
+import * as evo from './evolution.js';
 
 const MAIN_UUID = 'com.ulanzi.ulanzistudio.chatjump';
 
@@ -50,6 +51,30 @@ $UD.onClear((jsn) => {
 
 $UD.onParamFromApp(applySettings);
 $UD.onParamFromPlugin(applySettings);
+
+// Property Inspector -> main: Evolution API requests (import contacts + photo).
+// Everything here is async so the event loop is never blocked.
+$UD.onSendToPlugin(async (jsn) => {
+  const p = jsn && jsn.payload;
+  const ctx = jsn && jsn.context;
+  if (!p || p.cmd !== 'evo' || !ctx) return;
+  const reply = (data) => $UD.sendToPropertyInspector({ cmd: 'evoResult', op: p.op, ...data }, ctx);
+  try {
+    if (p.op === 'test') {
+      const r = await evo.testConnection(p.config || {});
+      reply({ ok: true, state: r.state });
+    } else if (p.op === 'list') {
+      const contacts = await evo.listContacts(p.config || {});
+      reply({ ok: true, contacts });
+    } else if (p.op === 'pick') {
+      const url = await evo.fetchProfilePictureUrl({ ...(p.config || {}), number: p.number });
+      const iconPath = await evo.downloadPhoto(url, p.number);
+      reply({ ok: true, contactName: p.name || '', number: p.number, iconPath });
+    }
+  } catch (e) {
+    reply({ ok: false, error: e && e.message ? e.message : String(e) });
+  }
+});
 
 function applySettings(jsn) {
   const inst = ACTION_CACHES[jsn.context];

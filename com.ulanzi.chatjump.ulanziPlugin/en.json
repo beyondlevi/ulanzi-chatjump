@@ -13,6 +13,18 @@
     "Open by": "Open by",
     "Username": "Username",
     "Group invite link": "Group invite link",
+    "Import from WhatsApp (Evolution API)": "Import from WhatsApp (Evolution API)",
+    "Server URL": "Server URL",
+    "API Key": "API Key",
+    "Instance": "Instance",
+    "Test connection": "Test connection",
+    "Import contact": "Import contact",
+    "Search contacts...": "Search contacts...",
+    "Testing...": "Testing...",
+    "Loading contacts...": "Loading contacts...",
+    "Fetching...": "Fetching...",
+    "Imported": "Imported",
+    "no photo": "no photo",
     "Enter the number in international format (with country code). WhatsApp Desktop or WhatsApp must be installed.": "Enter the number in international format (with country code). WhatsApp Desktop or WhatsApp must be installed.",
     "Username opens public users, groups and channels (@name). Phone works only for contacts already in your Telegram. Group invite link (https://t.me/+...) opens a private group you already belong to. Telegram Desktop must be installed.": "Username opens public users, groups and channels (@name). Phone works only for contacts already in your Telegram. Group invite link (https://t.me/+...) opens a private group you already belong to. Telegram Desktop must be installed."
   }
