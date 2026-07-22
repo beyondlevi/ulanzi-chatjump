@@ -1,0 +1,47 @@
+{
+  "Author": "Levi Nobrega",
+  "Name": "ChatJump",
+  "Description": "One-tap shortcuts to open favorite WhatsApp and Telegram chats. Each key jumps straight to a specific conversation, showing the contact photo and name.",
+  "Icon": "assets/icons/icon.png",
+  "Version": "1.0.0",
+  "Category": "ChatJump",
+  "CategoryIcon": "assets/icons/category.png",
+  "CodePath": "plugin/app.html",
+  "Type": "JavaScript",
+  "UUID": "com.ulanzi.ulanzistudio.chatjump",
+  "Actions": [
+    {
+      "Name": "WhatsApp Chat",
+      "Icon": "assets/icons/whatsapp.png",
+      "PropertyInspectorPath": "property-inspector/whatsapp/inspector.html",
+      "state": 0,
+      "States": [
+        { "Name": "Default", "Image": "assets/icons/whatsapp.png" }
+      ],
+      "Tooltip": "Open a specific WhatsApp conversation",
+      "UUID": "com.ulanzi.ulanzistudio.chatjump.whatsapp",
+      "SupportedInMultiActions": true,
+      "Controllers": ["Keypad"],
+      "Devices": []
+    },
+    {
+      "Name": "Telegram Chat",
+      "Icon": "assets/icons/telegram.png",
+      "PropertyInspectorPath": "property-inspector/telegram/inspector.html",
+      "state": 0,
+      "States": [
+        { "Name": "Default", "Image": "assets/icons/telegram.png" }
+      ],
+      "Tooltip": "Open a specific Telegram conversation",
+      "UUID": "com.ulanzi.ulanzistudio.chatjump.telegram",
+      "SupportedInMultiActions": true,
+      "Controllers": ["Keypad"],
+      "Devices": []
+    }
+  ],
+  "OS": [
+    { "Platform": "windows", "MinimumVersion": "10" },
+    { "Platform": "mac", "MinimumVersion": "10.11" }
+  ],
+  "Software": { "MinVersion": "2.1.4" }
+}

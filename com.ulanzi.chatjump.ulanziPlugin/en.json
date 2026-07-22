@@ -1,0 +1,18 @@
+{
+  "Name": "ChatJump",
+  "Description": "One-tap shortcuts to open favorite WhatsApp and Telegram chats. Each key jumps straight to a specific conversation, showing the contact photo and name.",
+  "Actions": [
+    { "Name": "WhatsApp Chat", "Tooltip": "Open a specific WhatsApp conversation" },
+    { "Name": "Telegram Chat", "Tooltip": "Open a specific Telegram conversation" }
+  ],
+  "Localization": {
+    "Contact name": "Contact name",
+    "Phone number": "Phone number",
+    "Contact photo": "Contact photo",
+    "Choose image...": "Choose image...",
+    "Open by": "Open by",
+    "Username": "Username",
+    "Enter the number in international format (with country code). WhatsApp Desktop or WhatsApp must be installed.": "Enter the number in international format (with country code). WhatsApp Desktop or WhatsApp must be installed.",
+    "Username opens public handles (@name). Phone works only for contacts already in your Telegram. Telegram Desktop must be installed.": "Username opens public handles (@name). Phone works only for contacts already in your Telegram. Telegram Desktop must be installed."
+  }
+}

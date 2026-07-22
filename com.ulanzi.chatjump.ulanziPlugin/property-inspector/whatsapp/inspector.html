@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,minimal-ui,viewport-fit=cover" />
+  <title>ChatJump - WhatsApp</title>
+  <link rel="stylesheet" href="../../libs/css/uspi.css" />
+  <style>
+    .cj-btn { padding: 6px 12px; border-radius: 4px; border: 1px solid #4a4a4a; background: #2d2d2d; color: #eee; cursor: pointer; }
+    .cj-btn:hover { background: #3a3a3a; }
+    .cj-file { font-size: 11px; opacity: 0.7; margin-top: 4px; word-break: break-all; }
+    .cj-note { font-size: 11px; opacity: 0.7; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div class="uspi-wrapper hidden">
+    <form id="property-inspector">
+      <div class="uspi-item">
+        <div class="uspi-item-label" data-localize>Contact name</div>
+        <input class="uspi-item-value" type="text" name="contactName" placeholder="Jane Doe" />
+      </div>
+
+      <div class="uspi-item">
+        <div class="uspi-item-label" data-localize>Phone number</div>
+        <input class="uspi-item-value" type="text" name="phone" placeholder="+1 555 123 4567" />
+      </div>
+
+      <div class="uspi-item">
+        <div class="uspi-item-label" data-localize>Contact photo</div>
+        <div class="uspi-item-value">
+          <button type="button" id="pickPhoto" class="cj-btn" data-localize>Choose image...</button>
+          <input type="hidden" name="iconPath" />
+          <div id="photoPath" class="cj-file"></div>
+        </div>
+      </div>
+
+      <div class="uspi-item">
+        <div class="cj-note" data-localize>Enter the number in international format (with country code). WhatsApp Desktop or WhatsApp must be installed.</div>
+      </div>
+    </form>
+  </div>
+
+  <script src="../../libs/js/constants.js"></script>
+  <script src="../../libs/js/eventEmitter.js"></script>
+  <script src="../../libs/js/timers.js"></script>
+  <script src="../../libs/js/utils.js"></script>
+  <script src="../../libs/js/ulanziApi.js"></script>
+
+  <script src="./inspector.js"></script>
+</body>
+</html>

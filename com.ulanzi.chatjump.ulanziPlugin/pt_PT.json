@@ -1,0 +1,18 @@
+{
+  "Name": "ChatJump",
+  "Description": "Atalhos de um toque para abrir conversas favoritas no WhatsApp e no Telegram. Cada tecla vai direto para uma conversa especifica, mostrando a foto e o nome do contato.",
+  "Actions": [
+    { "Name": "Conversa WhatsApp", "Tooltip": "Abrir uma conversa especifica do WhatsApp" },
+    { "Name": "Conversa Telegram", "Tooltip": "Abrir uma conversa especifica do Telegram" }
+  ],
+  "Localization": {
+    "Contact name": "Nome do contato",
+    "Phone number": "Numero de telefone",
+    "Contact photo": "Foto do contato",
+    "Choose image...": "Escolher imagem...",
+    "Open by": "Abrir por",
+    "Username": "Nome de usuario",
+    "Enter the number in international format (with country code). WhatsApp Desktop or WhatsApp must be installed.": "Informe o numero no formato internacional (com codigo do pais). O WhatsApp Desktop ou WhatsApp precisa estar instalado.",
+    "Username opens public handles (@name). Phone works only for contacts already in your Telegram. Telegram Desktop must be installed.": "O nome de usuario abre perfis publicos (@nome). O telefone funciona apenas para contatos ja salvos no seu Telegram. O Telegram Desktop precisa estar instalado."
+  }
+}
