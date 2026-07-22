@@ -25,6 +25,18 @@
     "Fetching...": "Fetching...",
     "Imported": "Imported",
     "no photo": "no photo",
+    "Import from Telegram (GramJS)": "Import from Telegram (GramJS)",
+    "App ID": "App ID",
+    "API Hash": "API Hash",
+    "Connect": "Connect",
+    "Submit code": "Submit code",
+    "Submit password": "Submit password",
+    "Connecting...": "Connecting...",
+    "Checking code...": "Checking code...",
+    "Checking password...": "Checking password...",
+    "Enter the code Telegram sent you": "Enter the code Telegram sent you",
+    "Enter your 2FA password": "Enter your 2FA password",
+    "Connected as": "Connected as",
     "Enter the number in international format (with country code). WhatsApp Desktop or WhatsApp must be installed.": "Enter the number in international format (with country code). WhatsApp Desktop or WhatsApp must be installed.",
     "Username opens public users, groups and channels (@name). Phone works only for contacts already in your Telegram. Group invite link (https://t.me/+...) opens a private group you already belong to. Telegram Desktop must be installed.": "Username opens public users, groups and channels (@name). Phone works only for contacts already in your Telegram. Group invite link (https://t.me/+...) opens a private group you already belong to. Telegram Desktop must be installed."
   }

@@ -22,6 +22,7 @@ import { spawn } from 'node:child_process';
 import { UlanziApi } from './plugin-common-node/index.js';
 import { composeIconDataUri } from './badge.js';
 import * as evo from './evolution.js';
+import * as tg from './telegram-import.js';
 
 const MAIN_UUID = 'com.ulanzi.ulanzistudio.chatjump';
 
@@ -52,12 +53,18 @@ $UD.onClear((jsn) => {
 $UD.onParamFromApp(applySettings);
 $UD.onParamFromPlugin(applySettings);
 
-// Property Inspector -> main: Evolution API requests (import contacts + photo).
-// Everything here is async so the event loop is never blocked.
+// Property Inspector -> main: contact-import requests (Evolution for WhatsApp,
+// teleproto/GramJS for Telegram). Everything here is async; the event loop is
+// never blocked.
 $UD.onSendToPlugin(async (jsn) => {
   const p = jsn && jsn.payload;
   const ctx = jsn && jsn.context;
-  if (!p || p.cmd !== 'evo' || !ctx) return;
+  if (!p || !ctx) return;
+  if (p.cmd === 'evo') return handleEvo(p, ctx);
+  if (p.cmd === 'tg') return handleTg(p, ctx);
+});
+
+async function handleEvo(p, ctx) {
   const reply = (data) => $UD.sendToPropertyInspector({ cmd: 'evoResult', op: p.op, ...data }, ctx);
   try {
     if (p.op === 'test') {
@@ -74,7 +81,34 @@ $UD.onSendToPlugin(async (jsn) => {
   } catch (e) {
     reply({ ok: false, error: e && e.message ? e.message : String(e) });
   }
-});
+}
+
+async function handleTg(p, ctx) {
+  const reply = (data) => $UD.sendToPropertyInspector({ cmd: 'tgResult', op: p.op, ...data }, ctx);
+  try {
+    if (p.op === 'status') {
+      const r = await tg.getStatus(p.config || {});
+      reply({ ok: true, ...r });
+    } else if (p.op === 'login') {
+      // login pushes progress asynchronously (needs code / 2FA / connected)
+      const notify = (data) => $UD.sendToPropertyInspector({ cmd: 'tgResult', op: 'login', ...data }, ctx);
+      const r = await tg.startLogin(p.config || {}, notify);
+      if (r && r.connected) notify({ ok: true, ...r });
+    } else if (p.op === 'code') {
+      tg.submitCode(p.code);
+    } else if (p.op === 'password') {
+      tg.submitPassword(p.password);
+    } else if (p.op === 'list') {
+      const contacts = await tg.listDialogs(p.config || {});
+      reply({ ok: true, contacts });
+    } else if (p.op === 'pick') {
+      const r = await tg.pickEntity(p.config || {}, p.id);
+      reply({ ok: true, ...r });
+    }
+  } catch (e) {
+    reply({ ok: false, error: e && e.message ? e.message : String(e) });
+  }
+}
 
 function applySettings(jsn) {
   const inst = ACTION_CACHES[jsn.context];

@@ -10,6 +10,17 @@
     .cj-btn:hover { background: #3a3a3a; }
     .cj-file { font-size: 11px; opacity: 0.7; margin-top: 4px; word-break: break-all; }
     .cj-note { font-size: 11px; opacity: 0.7; line-height: 1.4; }
+    .cj-evo { margin-top: 14px; border-top: 1px solid #3a3a3a; padding-top: 10px; }
+    .cj-evo-title { font-size: 12px; opacity: 0.85; margin-bottom: 6px; }
+    .cj-evo label { display: block; font-size: 11px; opacity: 0.7; margin: 6px 0 2px; }
+    .cj-evo input[type=text], .cj-evo input[type=password] { width: 100%; box-sizing: border-box; padding: 5px 8px; background: #1b1b1b; color: #eee; border: 1px solid #3a3a3a; border-radius: 4px; font-size: 12px; }
+    .cj-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+    .cj-status { font-size: 11px; opacity: 0.9; }
+    #tg-results { max-height: 180px; overflow: auto; border: 1px solid #3a3a3a; border-radius: 4px; margin-top: 8px; display: none; }
+    .cj-contact { padding: 6px 8px; cursor: pointer; border-bottom: 1px solid #2a2a2a; font-size: 12px; display: flex; justify-content: space-between; gap: 8px; }
+    .cj-contact:hover { background: #2d2d2d; }
+    .cj-contact .sub { opacity: 0.6; font-size: 11px; }
+    .cj-hidden { display: none; }
   </style>
 </head>
 <body>
@@ -57,6 +68,31 @@
         <div class="cj-note" data-localize>Username opens public users, groups and channels (@name). Phone works only for contacts already in your Telegram. Group invite link (https://t.me/+...) opens a private group you already belong to. Telegram Desktop must be installed.</div>
       </div>
     </form>
+
+    <div class="cj-evo">
+      <div class="cj-evo-title" data-localize>Import from Telegram (GramJS)</div>
+      <label data-localize>App ID</label>
+      <input type="text" id="tg-apiid" placeholder="1234567" />
+      <label data-localize>API Hash</label>
+      <input type="password" id="tg-apihash" placeholder="********" />
+      <label data-localize>Phone number</label>
+      <input type="text" id="tg-phone" placeholder="+1 555 123 4567" />
+      <div class="cj-row">
+        <button type="button" id="tg-connect" class="cj-btn" data-localize>Connect</button>
+        <button type="button" id="tg-import" class="cj-btn cj-hidden" data-localize>Import contact</button>
+        <span id="tg-status" class="cj-status"></span>
+      </div>
+      <div id="tg-code-row" class="cj-row cj-hidden">
+        <input type="text" id="tg-code" placeholder="12345" style="flex:1;" />
+        <button type="button" id="tg-code-btn" class="cj-btn" data-localize>Submit code</button>
+      </div>
+      <div id="tg-pass-row" class="cj-row cj-hidden">
+        <input type="password" id="tg-pass" placeholder="2FA password" style="flex:1;" />
+        <button type="button" id="tg-pass-btn" class="cj-btn" data-localize>Submit password</button>
+      </div>
+      <input type="text" id="tg-search" class="cj-hidden" style="margin-top:8px;" />
+      <div id="tg-results"></div>
+    </div>
   </div>
 
   <script src="../../libs/js/constants.js"></script>

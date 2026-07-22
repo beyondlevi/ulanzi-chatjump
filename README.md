@@ -25,6 +25,10 @@ showing the contact's photo and name on the key.
   [Evolution API](https://doc.evolution-api.com/) server to search your WhatsApp
   contacts and import a contact's number and profile photo into a key with one
   click.
+- **Import from Telegram (GramJS)** — connect your Telegram account (App ID +
+  API Hash + phone, via [teleproto](https://www.npmjs.com/package/teleproto), the
+  maintained GramJS fork) to search your chats and import a contact's `@username`
+  or a group's invite link, plus the profile photo, into a key.
 - **Bilingual** — interface localized in **English** and **Portuguese (pt_PT)**.
 - Opens the messenger app directly via its URL scheme (not a browser tab).
 
@@ -43,6 +47,25 @@ Calls run in the plugin's background service (async, never blocking) using
 `POST /chat/findContacts/{instance}` and `POST /chat/fetchProfilePictureUrl/{instance}`
 with the `apikey` header. The API key is stored in Ulanzi Studio's local
 settings.
+
+## Import contacts from Telegram (GramJS / teleproto)
+
+In a **Telegram Chat** key's settings, open **Import from Telegram (GramJS)** and
+enter your Telegram **App ID**, **API Hash** and **phone number**
+([my.telegram.org](https://my.telegram.org) → API development tools). Then:
+
+1. **Connect** — Telegram sends a login code; enter it (and your 2FA password, if
+   set) right in the panel. The session is saved so you only log in once.
+2. **Import contact** lists your chats (users, groups, channels) with search.
+3. Pick one — its **name**, **@username** (users/public groups) or **invite link**
+   (private groups where you're an admin), and **profile photo** are filled in.
+
+Uses MTProto via [teleproto](https://www.npmjs.com/package/teleproto) (the
+maintained GramJS fork) in the background service, fully async.
+
+> **Security note:** the saved Telegram session grants full access to your
+> account and is stored in Ulanzi Studio's local settings. Private-group invite
+> links can only be exported if you are an admin of that group.
 
 ## How it works
 
