@@ -3,7 +3,7 @@
   "Name": "ChatJump",
   "Description": "One-tap shortcuts to open favorite WhatsApp and Telegram chats. Each key jumps straight to a specific conversation, showing the contact photo and name.",
   "Icon": "assets/icons/icon.png",
-  "Version": "1.0.0",
+  "Version": "1.0.1",
   "Category": "ChatJump",
   "CategoryIcon": "assets/icons/category.png",
   "CodePath": "plugin/app.js",
