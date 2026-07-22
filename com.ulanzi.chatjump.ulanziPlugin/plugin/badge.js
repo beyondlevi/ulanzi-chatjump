@@ -12,6 +12,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PNG } from 'pngjs';
 import jpeg from 'jpeg-js';
+import { GifReader } from 'omggif';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const MAX_DIM = 256; // deck keys are small; bound work and output size
@@ -31,7 +32,15 @@ function decodeImage(file) {
     const img = jpeg.decode(buf, { useTArray: true, formatAsRGBA: true, maxMemoryUsageInMB: 512 });
     return { width: img.width, height: img.height, data: Buffer.from(img.data) };
   }
-  return null; // e.g. .gif -> caller falls back to the raw photo
+  if (ext === '.gif') {
+    const reader = new GifReader(buf);
+    const w = reader.width;
+    const h = reader.height;
+    const out = Buffer.alloc(w * h * 4);
+    reader.decodeAndBlitFrameRGBA(0, out); // first frame is enough for a static key
+    return { width: w, height: h, data: out };
+  }
+  return null; // e.g. .webp -> caller falls back to the raw photo
 }
 
 // Bilinear resize of an RGBA image to (dw, dh).
@@ -120,7 +129,8 @@ export function composeIconDataUri(photoPath, app) {
   const size = Math.max(16, Math.round(short * BADGE_SCALE));
   const margin = Math.round(short * BADGE_MARGIN);
   const badge = resizeRGBA(loadBadge(app), size, size);
-  compositeOver(base, badge, base.width - size - margin, margin);
+  // bottom-right corner
+  compositeOver(base, badge, base.width - size - margin, base.height - size - margin);
 
   const png = new PNG({ width: base.width, height: base.height });
   png.data = Buffer.from(base.data);
