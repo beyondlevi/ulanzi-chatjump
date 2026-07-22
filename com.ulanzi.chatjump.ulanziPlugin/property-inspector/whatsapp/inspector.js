@@ -34,6 +34,8 @@ $UD.onSelectdialog((jsn) => {
     form.querySelector('[name="iconPath"]').value = jsn.path;
     updatePhotoLabel(jsn.path);
     save();
+    // refresh diagnostics after the main service re-renders the key
+    setTimeout(() => window.cjFetchLogs && window.cjFetchLogs(), 700);
   }
 });
 

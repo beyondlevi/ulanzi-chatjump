@@ -23,12 +23,22 @@ import { UlanziApi } from './plugin-common-node/index.js';
 import { composeIconDataUri } from './badge.js';
 
 const MAIN_UUID = 'com.ulanzi.ulanzistudio.chatjump';
+const VERSION = '1.0.1';
 
 const $UD = new UlanziApi();
 const ACTION_CACHES = {};
 
+// In-memory diagnostics, surfaced to the Property Inspector on request.
+const LOG_BUFFER = [];
+function pushLog(msg) {
+  const line = `${new Date().toISOString().slice(11, 19)} ${msg}`;
+  LOG_BUFFER.push(line);
+  if (LOG_BUFFER.length > 200) LOG_BUFFER.shift();
+  try { $UD.logMessage(`ChatJump ${msg}`, 'info'); } catch (e) { /* ignore */ }
+}
+
 $UD.connect(MAIN_UUID);
-$UD.onConnected(() => {});
+$UD.onConnected(() => pushLog(`connected v${VERSION} platform=${process.platform} node=${process.version}`));
 
 $UD.onAdd((jsn) => {
   const ctx = jsn.context;
@@ -50,6 +60,14 @@ $UD.onClear((jsn) => {
 
 $UD.onParamFromApp(applySettings);
 $UD.onParamFromPlugin(applySettings);
+
+// Property Inspector asks for diagnostics; reply with version + recent log lines.
+$UD.onSendToPlugin((jsn) => {
+  const cmd = jsn && jsn.payload && jsn.payload.cmd;
+  if (cmd === 'getLogs' && jsn.context) {
+    $UD.sendToPropertyInspector({ cmd: 'logs', version: VERSION, lines: LOG_BUFFER.slice(-200) }, jsn.context);
+  }
+});
 
 function applySettings(jsn) {
   const inst = ACTION_CACHES[jsn.context];
@@ -83,16 +101,17 @@ class ChatContact {
     if (this.settings.iconPath) {
       // Photo set: overlay the app badge so the messenger stays recognizable.
       let dataUri = null;
+      const diag = [];
       try {
-        dataUri = composeIconDataUri(this.settings.iconPath, this.app);
+        dataUri = composeIconDataUri(this.settings.iconPath, this.app, diag);
       } catch (e) {
-        this.$UD.logMessage(`ChatJump: badge compose failed - ${e.message}`, 'error');
+        diag.push(`EXCEPTION ${e.message}`);
       }
+      pushLog(`[${this.app}] render icon: ${diag.join(' | ')}`);
       if (dataUri) {
         this.$UD.setBaseDataIcon(this.context, dataUri, label);
       } else {
-        // Couldn't build a badged icon (undecodable photo): show it as-is.
-        this.$UD.logMessage(`ChatJump: no badge for ${this.app} (photo=${this.settings.iconPath}); showing plain photo`, 'info');
+        // Couldn't build a badged icon: show the photo as-is.
         this.$UD.setPathIcon(this.context, this.settings.iconPath, label);
       }
     } else {
@@ -104,14 +123,16 @@ class ChatContact {
   open() {
     const url = this.buildUrl();
     if (!url) {
+      pushLog(`[${this.app}] open aborted: missing number/username/invite`);
       this.$UD.showAlert(this.context);
       this.$UD.toast('ChatJump: set a phone number or username in the settings first.');
       return;
     }
+    pushLog(`[${this.app}] open ${url}`);
     openExternal(url, (err) => {
       if (err) {
+        pushLog(`[${this.app}] open FAILED: ${err.message}`);
         this.$UD.showAlert(this.context);
-        this.$UD.logMessage(`ChatJump: failed to open ${url} - ${err.message}`, 'error');
       }
     });
   }

@@ -43,9 +43,10 @@ function decodePngBuffer(buf) {
   return { width: png.width, height: png.height, data: png.data };
 }
 
-function decodeImage(file) {
+function decodeImage(file, diag) {
   const buf = readFileSync(file);
   const fmt = sniff(buf);
+  diag.push(`file bytes=${buf.length} sniffed=${fmt || 'unknown'}`);
   try {
     if (fmt === 'png') return decodePngBuffer(buf);
     if (fmt === 'jpg') {
@@ -61,18 +62,18 @@ function decodeImage(file) {
       return { width: w, height: h, data: out };
     }
   } catch (e) {
-    // fall through to OS transcode as a last resort
+    diag.push(`direct decode failed: ${e.message}`);
   }
   // WebP / HEIC / unknown / corrupt: let the OS transcode to PNG, then decode.
-  return decodeViaOS(file);
+  return decodeViaOS(file, diag);
 }
 
 // Transcode any image the OS understands into a temp PNG and decode that.
-function decodeViaOS(file) {
+function decodeViaOS(file, diag) {
   const tmp = path.join(os.tmpdir(), `chatjump-${process.pid}-${Date.now()}.png`);
   const attempts =
     process.platform === 'darwin'
-      ? [['sips', ['-s', 'format', 'png', file, '--out', tmp]]]
+      ? [['sips', ['-s', 'format', 'png', file, '--out', tmp]], ['/usr/bin/sips', ['-s', 'format', 'png', file, '--out', tmp]]]
       : process.platform === 'win32'
         ? [['magick', [file, tmp]]]
         : [['magick', [file, tmp]], ['convert', [file, tmp]]];
@@ -80,9 +81,13 @@ function decodeViaOS(file) {
     for (const [cmd, args] of attempts) {
       try {
         execFileSync(cmd, args, { stdio: 'ignore', timeout: 15000 });
-        if (existsSync(tmp)) return decodePngBuffer(readFileSync(tmp));
+        if (existsSync(tmp)) {
+          diag.push(`OS transcode ok via ${cmd}`);
+          return decodePngBuffer(readFileSync(tmp));
+        }
+        diag.push(`OS transcode ${cmd}: no output`);
       } catch (e) {
-        // try the next converter
+        diag.push(`OS transcode ${cmd} failed: ${e.code || e.message}`);
       }
     }
     return null;
@@ -157,15 +162,25 @@ function loadBadge(app) {
 /**
  * Compose contact photo + app badge. Returns a PNG data URI, or null when the
  * photo can't be decoded (caller then shows the raw photo without a badge).
+ * Steps are appended to the optional `diag` array for in-app diagnostics.
  */
-export function composeIconDataUri(photoPath, app) {
+export function composeIconDataUri(photoPath, app, diag = []) {
   let photo;
   try {
-    photo = decodeImage(photoPath);
+    photo = decodeImage(photoPath, diag);
   } catch (e) {
+    diag.push(`decode threw: ${e.message}`);
     return null;
   }
-  if (!photo || app !== 'whatsapp' && app !== 'telegram') return null;
+  if (!photo) {
+    diag.push('photo not decodable -> no badge');
+    return null;
+  }
+  if (app !== 'whatsapp' && app !== 'telegram') {
+    diag.push(`unknown app "${app}" -> no badge`);
+    return null;
+  }
+  diag.push(`decoded ${photo.width}x${photo.height}`);
 
   // Scale the photo down to a key-sized canvas first.
   let base = photo;
@@ -179,10 +194,14 @@ export function composeIconDataUri(photoPath, app) {
   const size = Math.max(16, Math.round(short * BADGE_SCALE));
   const margin = Math.round(short * BADGE_MARGIN);
   const badgeSrc = loadBadge(app);
-  if (!badgeSrc) return null;
+  if (!badgeSrc) {
+    diag.push(`badge "${app}" missing -> no badge`);
+    return null;
+  }
   const badge = resizeRGBA(badgeSrc, size, size);
   // bottom-right corner
   compositeOver(base, badge, base.width - size - margin, base.height - size - margin);
+  diag.push(`badge ${app} applied ok`);
 
   const png = new PNG({ width: base.width, height: base.height });
   png.data = Buffer.from(base.data);
