@@ -1,24 +1,18 @@
 /**
  * ChatJump - icon compositor
  *
- * Overlays a small app badge (WhatsApp / Telegram) on the bottom-right corner of
+ * Overlays a small app badge (WhatsApp / Telegram) on the top-right corner of
  * the user's contact photo, so a key that shows a face still tells you which
- * messenger it opens. Decodes PNG/JPEG/GIF in pure JS (pngjs + jpeg-js +
- * omggif); for anything else (WebP, HEIC, or a file whose extension lies about
- * its real content) it asks the OS to transcode to PNG first (sips on macOS,
- * ImageMagick elsewhere). No native npm deps, so it runs unchanged inside the
- * Ulanzi Studio Node runtime.
+ * messenger it opens. Pure-JS (pngjs + jpeg-js), no native deps, so it runs
+ * unchanged inside the Ulanzi Studio Node runtime on any platform.
  */
 
-import { readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
-import os from 'node:os';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PNG } from 'pngjs';
 import jpeg from 'jpeg-js';
 import { GifReader } from 'omggif';
-import { BADGE_PNG_BASE64 } from './badges-data.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const MAX_DIM = 256; // deck keys are small; bound work and output size
@@ -27,75 +21,27 @@ const BADGE_MARGIN = 0.05;
 
 const BADGE_CACHE = {};
 
-// Identify the real image format from the file header, not the extension —
-// downloaded photos are often WebP saved as ".jpg", which would crash jpeg-js.
-function sniff(buf) {
-  if (buf.length >= 8 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return 'png';
-  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'jpg';
-  if (buf.length >= 4 && buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46) return 'gif';
-  if (buf.length >= 12 && buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP') return 'webp';
-  if (buf.length >= 12 && buf.toString('ascii', 4, 8) === 'ftyp') return 'heic'; // HEIC/HEIF/AVIF family
-  return null;
-}
-
-function decodePngBuffer(buf) {
-  const png = PNG.sync.read(buf);
-  return { width: png.width, height: png.height, data: png.data };
-}
-
-function decodeImage(file, diag) {
+function decodeImage(file) {
+  const ext = path.extname(file).toLowerCase();
   const buf = readFileSync(file);
-  const fmt = sniff(buf);
-  diag.push(`file bytes=${buf.length} sniffed=${fmt || 'unknown'}`);
-  try {
-    if (fmt === 'png') return decodePngBuffer(buf);
-    if (fmt === 'jpg') {
-      const img = jpeg.decode(buf, { useTArray: true, formatAsRGBA: true, maxMemoryUsageInMB: 512 });
-      return { width: img.width, height: img.height, data: Buffer.from(img.data) };
-    }
-    if (fmt === 'gif') {
-      const reader = new GifReader(buf);
-      const w = reader.width;
-      const h = reader.height;
-      const out = Buffer.alloc(w * h * 4);
-      reader.decodeAndBlitFrameRGBA(0, out); // first frame is enough for a static key
-      return { width: w, height: h, data: out };
-    }
-  } catch (e) {
-    diag.push(`direct decode failed: ${e.message}`);
+  if (ext === '.png') {
+    const png = PNG.sync.read(buf);
+    return { width: png.width, height: png.height, data: png.data };
   }
-  // WebP / HEIC / unknown / corrupt: let the OS transcode to PNG, then decode.
-  return decodeViaOS(file, diag);
-}
-
-// Transcode any image the OS understands into a temp PNG and decode that.
-function decodeViaOS(file, diag) {
-  const tmp = path.join(os.tmpdir(), `chatjump-${process.pid}-${Date.now()}.png`);
-  const attempts =
-    process.platform === 'darwin'
-      ? [['sips', ['-s', 'format', 'png', file, '--out', tmp]], ['/usr/bin/sips', ['-s', 'format', 'png', file, '--out', tmp]]]
-      : process.platform === 'win32'
-        ? [['magick', [file, tmp]]]
-        : [['magick', [file, tmp]], ['convert', [file, tmp]]];
-  try {
-    for (const [cmd, args] of attempts) {
-      try {
-        execFileSync(cmd, args, { stdio: 'ignore', timeout: 15000 });
-        if (existsSync(tmp)) {
-          diag.push(`OS transcode ok via ${cmd}`);
-          return decodePngBuffer(readFileSync(tmp));
-        }
-        diag.push(`OS transcode ${cmd}: no output`);
-      } catch (e) {
-        diag.push(`OS transcode ${cmd} failed: ${e.code || e.message}`);
-      }
-    }
-    return null;
-  } finally {
-    try { if (existsSync(tmp)) rmSync(tmp); } catch (e) { /* ignore */ }
+  if (ext === '.jpg' || ext === '.jpeg') {
+    const img = jpeg.decode(buf, { useTArray: true, formatAsRGBA: true, maxMemoryUsageInMB: 512 });
+    return { width: img.width, height: img.height, data: Buffer.from(img.data) };
   }
+  if (ext === '.gif') {
+    const reader = new GifReader(buf);
+    const w = reader.width;
+    const h = reader.height;
+    const out = Buffer.alloc(w * h * 4);
+    reader.decodeAndBlitFrameRGBA(0, out); // first frame is enough for a static key
+    return { width: w, height: h, data: out };
+  }
+  return null; // e.g. .webp -> caller falls back to the raw photo
 }
-
 
 // Bilinear resize of an RGBA image to (dw, dh).
 function resizeRGBA(src, dw, dh) {
@@ -152,9 +98,8 @@ function compositeOver(base, top, ox, oy) {
 
 function loadBadge(app) {
   if (BADGE_CACHE[app]) return BADGE_CACHE[app];
-  const b64 = BADGE_PNG_BASE64[app];
-  if (!b64) return null;
-  const png = PNG.sync.read(Buffer.from(b64, 'base64'));
+  const file = path.join(HERE, '..', 'assets', 'icons', `badge-${app}.png`);
+  const png = PNG.sync.read(readFileSync(file));
   BADGE_CACHE[app] = { width: png.width, height: png.height, data: png.data };
   return BADGE_CACHE[app];
 }
@@ -162,25 +107,15 @@ function loadBadge(app) {
 /**
  * Compose contact photo + app badge. Returns a PNG data URI, or null when the
  * photo can't be decoded (caller then shows the raw photo without a badge).
- * Steps are appended to the optional `diag` array for in-app diagnostics.
  */
-export function composeIconDataUri(photoPath, app, diag = []) {
+export function composeIconDataUri(photoPath, app) {
   let photo;
   try {
-    photo = decodeImage(photoPath, diag);
+    photo = decodeImage(photoPath);
   } catch (e) {
-    diag.push(`decode threw: ${e.message}`);
     return null;
   }
-  if (!photo) {
-    diag.push('photo not decodable -> no badge');
-    return null;
-  }
-  if (app !== 'whatsapp' && app !== 'telegram') {
-    diag.push(`unknown app "${app}" -> no badge`);
-    return null;
-  }
-  diag.push(`decoded ${photo.width}x${photo.height}`);
+  if (!photo || app !== 'whatsapp' && app !== 'telegram') return null;
 
   // Scale the photo down to a key-sized canvas first.
   let base = photo;
@@ -193,15 +128,9 @@ export function composeIconDataUri(photoPath, app, diag = []) {
   const short = Math.min(base.width, base.height);
   const size = Math.max(16, Math.round(short * BADGE_SCALE));
   const margin = Math.round(short * BADGE_MARGIN);
-  const badgeSrc = loadBadge(app);
-  if (!badgeSrc) {
-    diag.push(`badge "${app}" missing -> no badge`);
-    return null;
-  }
-  const badge = resizeRGBA(badgeSrc, size, size);
+  const badge = resizeRGBA(loadBadge(app), size, size);
   // bottom-right corner
   compositeOver(base, badge, base.width - size - margin, base.height - size - margin);
-  diag.push(`badge ${app} applied ok`);
 
   const png = new PNG({ width: base.width, height: base.height });
   png.data = Buffer.from(base.data);

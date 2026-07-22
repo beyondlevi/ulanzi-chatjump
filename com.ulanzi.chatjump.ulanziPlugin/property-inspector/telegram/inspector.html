@@ -10,11 +10,6 @@
     .cj-btn:hover { background: #3a3a3a; }
     .cj-file { font-size: 11px; opacity: 0.7; margin-top: 4px; word-break: break-all; }
     .cj-note { font-size: 11px; opacity: 0.7; line-height: 1.4; }
-    .cj-diag { margin-top: 14px; border-top: 1px solid #3a3a3a; padding-top: 10px; }
-    .cj-diag-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-    .cj-diag-title { font-size: 12px; opacity: 0.85; }
-    #cj-version { font-size: 11px; opacity: 0.6; }
-    #cj-logs { font-family: monospace; font-size: 10px; white-space: pre-wrap; word-break: break-all; background: #1b1b1b; color: #cfcfcf; border: 1px solid #3a3a3a; border-radius: 4px; padding: 6px; max-height: 150px; overflow: auto; margin-bottom: 6px; }
   </style>
 </head>
 <body>
@@ -55,7 +50,6 @@
           <button type="button" id="pickPhoto" class="cj-btn" data-localize>Choose image...</button>
           <input type="hidden" name="iconPath" />
           <div id="photoPath" class="cj-file"></div>
-          <div class="cj-note" data-localize>Pick the photo with this button to get the app badge. A photo set from Ulanzi's own icon picker at the top won't be badged.</div>
         </div>
       </div>
 
@@ -63,15 +57,6 @@
         <div class="cj-note" data-localize>Username opens public users, groups and channels (@name). Phone works only for contacts already in your Telegram. Group invite link (https://t.me/+...) opens a private group you already belong to. Telegram Desktop must be installed.</div>
       </div>
     </form>
-
-    <div class="cj-diag">
-      <div class="cj-diag-head">
-        <span class="cj-diag-title" data-localize>Diagnostics</span>
-        <span id="cj-version">v1.0.2</span>
-      </div>
-      <pre id="cj-logs">(loading...)</pre>
-      <button type="button" id="cj-refresh" class="cj-btn" data-localize>Refresh logs</button>
-    </div>
   </div>
 
   <script src="../../libs/js/constants.js"></script>
@@ -81,6 +66,5 @@
   <script src="../../libs/js/ulanziApi.js"></script>
 
   <script src="./inspector.js"></script>
-  <script src="../diagnostics.js"></script>
 </body>
 </html>

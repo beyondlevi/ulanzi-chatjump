@@ -16,7 +16,7 @@ $UD.onConnected(() => {
   );
 
   document.querySelector('#pickPhoto').addEventListener('click', () => {
-    $UD.selectFileDialog('image(*.png *.jpg *.jpeg *.gif *.webp *.heic)');
+    $UD.selectFileDialog('image(*.png *.jpg *.jpeg *.gif)');
   });
 });
 
@@ -34,8 +34,6 @@ $UD.onSelectdialog((jsn) => {
     form.querySelector('[name="iconPath"]').value = jsn.path;
     updatePhotoLabel(jsn.path);
     save();
-    // refresh diagnostics after the main service re-renders the key
-    setTimeout(() => window.cjFetchLogs && window.cjFetchLogs(), 700);
   }
 });
 

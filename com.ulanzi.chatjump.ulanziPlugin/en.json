@@ -13,9 +13,6 @@
     "Open by": "Open by",
     "Username": "Username",
     "Group invite link": "Group invite link",
-    "Diagnostics": "Diagnostics",
-    "Refresh logs": "Refresh logs",
-    "Pick the photo with this button to get the app badge. A photo set from Ulanzi's own icon picker at the top won't be badged.": "Pick the photo with this button to get the app badge. A photo set from Ulanzi's own icon picker at the top won't be badged.",
     "Enter the number in international format (with country code). WhatsApp Desktop or WhatsApp must be installed.": "Enter the number in international format (with country code). WhatsApp Desktop or WhatsApp must be installed.",
     "Username opens public users, groups and channels (@name). Phone works only for contacts already in your Telegram. Group invite link (https://t.me/+...) opens a private group you already belong to. Telegram Desktop must be installed.": "Username opens public users, groups and channels (@name). Phone works only for contacts already in your Telegram. Group invite link (https://t.me/+...) opens a private group you already belong to. Telegram Desktop must be installed."
   }
