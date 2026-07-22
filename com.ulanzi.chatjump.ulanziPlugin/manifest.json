@@ -6,8 +6,9 @@
   "Version": "1.0.0",
   "Category": "ChatJump",
   "CategoryIcon": "assets/icons/category.png",
-  "CodePath": "plugin/app.html",
+  "CodePath": "plugin/app.js",
   "Type": "JavaScript",
+  "Inspect": "--inspect=127.0.0.1:9202",
   "UUID": "com.ulanzi.ulanzistudio.chatjump",
   "Actions": [
     {

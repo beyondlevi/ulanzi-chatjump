@@ -4,49 +4,74 @@
 
 ChatJump turns each key of your Ulanzi Studio deck into a shortcut that opens a
 **specific conversation** in WhatsApp or Telegram. No more searching your
-contact list — tap the key and the chat opens instantly, showing the contact's
-photo and name on the key.
+contact list — tap the key and the chat opens instantly in the desktop app,
+showing the contact's photo and name on the key.
 
 > Ulanzi Studio plugin. Built for the D200 / D200H / D200X / Dial macro keypads.
 
+![ChatJump](resources/cover.png)
+
 ## Features
 
-- **WhatsApp Chat** action — open a conversation by phone number.
-- **Telegram Chat** action — open a conversation by username or phone number.
-- Each key shows the **contact photo** and **name** you configure.
-- One contact per key; add as many keys as you like.
-- Works with the desktop apps (WhatsApp Desktop / Telegram Desktop) via native
-  deep links.
+- **WhatsApp Chat** — open a direct conversation by phone number.
+- **Telegram Chat** — open a conversation by username, phone number, or a
+  **private group invite link**.
+- **Telegram groups & channels** — public ones by `@username`, private groups by
+  their invite link (`https://t.me/+...`).
+- **Contact photo + app badge** — set any photo as the key icon; a small
+  WhatsApp/Telegram badge is added to the corner so you always know which app the
+  key opens.
+- **Bilingual** — interface localized in **English** and **Portuguese (pt_PT)**.
+- Opens the messenger app directly via its URL scheme (not a browser tab).
 
 ## How it works
 
-Each action stores a small settings object per key and, on press, opens the
-matching deep link handled by your OS:
+Each action stores a small settings object per key and, on press, hands the
+matching deep link to your OS, which launches the installed desktop app:
 
-| App      | Deep link                          | Configure with            |
-|----------|------------------------------------|---------------------------|
-| WhatsApp | `whatsapp://send?phone=<number>`   | Phone (international)      |
-| Telegram | `tg://resolve?domain=<username>`   | Username (`@handle`)      |
-| Telegram | `tg://resolve?phone=<number>`      | Phone (existing contact)  |
+| App / mode                 | Deep link                        | Configure with               |
+|----------------------------|----------------------------------|------------------------------|
+| WhatsApp — direct chat     | `whatsapp://send?phone=<number>` | Phone (international)         |
+| Telegram — username        | `tg://resolve?domain=<username>` | `@handle` (user/group/channel) |
+| Telegram — phone           | `tg://resolve?phone=<number>`    | Phone (existing contact)     |
+| Telegram — group invite    | `tg://join?invite=<hash>`        | Invite link `https://t.me/+...` |
 
-Phone numbers must be in international format (country code, digits only —
-ChatJump strips spaces and symbols automatically).
+Phone numbers must be in international format (country code); ChatJump strips
+spaces and symbols automatically. Telegram invite links are accepted in any
+form (`t.me/+hash`, `t.me/joinchat/hash`, `tg://join?invite=hash`, or the raw
+hash) — ChatJump extracts what it needs.
 
-## Install (development)
+### Why no WhatsApp groups?
+
+WhatsApp does not expose a `whatsapp://` scheme for group chats — the only handle
+is the `https://chat.whatsapp.com/<code>` invite link, which on desktop always
+opens in a browser. To keep every key a clean, direct in-app jump, ChatJump
+supports **WhatsApp direct chats** and **Telegram chats + groups**.
+
+## Install
+
+### From the plugin package
+
+1. Download `com.ulanzi.chatjump.ulanziPlugin.zip` from the
+   [latest release](../../releases/latest).
+2. Install it in Ulanzi Studio (or unzip it into the Ulanzi Studio `plugins`
+   folder), then restart / refresh the plugin list.
+
+### From source (development)
 
 1. Clone this repo.
 2. Copy `com.ulanzi.chatjump.ulanziPlugin/` into your Ulanzi Studio plugins
    folder, or load it via the `UlanziDeckSimulator` (`plugins/` folder).
 3. Restart / refresh the plugin list.
-4. Drag **WhatsApp Chat** or **Telegram Chat** onto a key and open its settings
-   to set the contact name, number/username, and photo.
 
 ## Configure a key
 
-1. Drag the action onto a key.
+1. Drag **WhatsApp Chat** or **Telegram Chat** onto a key.
 2. **Contact name** — shown as the key label.
-3. **Phone number** (WhatsApp / Telegram-by-phone) or **Username** (Telegram).
-4. **Contact photo** — choose an image; it becomes the key icon.
+3. For WhatsApp: the **phone number**. For Telegram: pick **Open by**
+   (Username / Phone number / Group invite link) and fill the matching field.
+4. **Contact photo** — choose an image; it becomes the key icon, with the app
+   badge added in the corner.
 
 ## Requirements
 
@@ -59,7 +84,6 @@ ChatJump strips spaces and symbols automatically).
 
 - More messengers (Signal, Slack, Discord, Messenger).
 - Auto-pull contact photo from the messaging app.
-- Community Store listing.
 
 ## License
 

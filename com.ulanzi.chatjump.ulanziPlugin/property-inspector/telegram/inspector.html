@@ -25,6 +25,7 @@
         <select class="uspi-item-value" name="target" id="target">
           <option value="username" data-localize>Username</option>
           <option value="phone" data-localize>Phone number</option>
+          <option value="invite" data-localize>Group invite link</option>
         </select>
       </div>
 
@@ -38,6 +39,11 @@
         <input class="uspi-item-value" type="text" name="phone" placeholder="+1 555 123 4567" />
       </div>
 
+      <div class="uspi-item hidden" id="row-invite">
+        <div class="uspi-item-label" data-localize>Group invite link</div>
+        <input class="uspi-item-value" type="text" name="groupLink" placeholder="https://t.me/+AbCdEfGhIj" />
+      </div>
+
       <div class="uspi-item">
         <div class="uspi-item-label" data-localize>Contact photo</div>
         <div class="uspi-item-value">
@@ -48,7 +54,7 @@
       </div>
 
       <div class="uspi-item">
-        <div class="cj-note" data-localize>Username opens public handles (@name). Phone works only for contacts already in your Telegram. Telegram Desktop must be installed.</div>
+        <div class="cj-note" data-localize>Username opens public users, groups and channels (@name). Phone works only for contacts already in your Telegram. Group invite link (https://t.me/+...) opens a private group you already belong to. Telegram Desktop must be installed.</div>
       </div>
     </form>
   </div>

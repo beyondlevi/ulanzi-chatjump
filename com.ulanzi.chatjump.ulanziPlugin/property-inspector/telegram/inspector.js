@@ -58,6 +58,7 @@ function toggleRows() {
   const target = form.querySelector('[name="target"]').value || 'username';
   document.querySelector('#row-username').classList.toggle('hidden', target !== 'username');
   document.querySelector('#row-phone').classList.toggle('hidden', target !== 'phone');
+  document.querySelector('#row-invite').classList.toggle('hidden', target !== 'invite');
 }
 
 function updatePhotoLabel(path) {

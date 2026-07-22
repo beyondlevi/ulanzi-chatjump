@@ -1,0 +1,10 @@
+{
+  "cover": "resources/cover.png",
+  "screenshots": [
+    "resources/screenshot-1.png",
+    "resources/screenshot-2.png"
+  ],
+  "longDescription": "ChatJump turns each key into a one-tap shortcut to a specific WhatsApp or Telegram conversation. No searching, no scrolling your chat list - press the key and the exact chat opens in the desktop app.\n\n## Actions\n\n- **WhatsApp Chat** - opens a direct conversation by phone number (international format) straight in WhatsApp Desktop.\n- **Telegram Chat** - opens a conversation by @username, phone number, or private group invite link, straight in Telegram Desktop.\n\n## Highlights\n\n- **Direct app launch** - keys open the messenger app itself via its URL scheme, not a browser tab.\n- **Groups (Telegram)** - jump to a public group/channel by @username, or a private group via its invite link (https://t.me/+...).\n- **Contact photo + app badge** - set any photo as the key icon; a small WhatsApp or Telegram badge is added to the corner so you always know which app the key opens.\n- **Bilingual** - interface localized in English and Portuguese (pt_PT).\n\n## Requirements\n\n- WhatsApp Desktop (or WhatsApp) installed for WhatsApp keys.\n- Telegram Desktop installed for Telegram keys.\n\nNote: WhatsApp only exposes direct (1:1) chats through its desktop URL scheme, so ChatJump supports WhatsApp direct chats and Telegram chats + groups.",
+  "deviceTypes": ["deck"],
+  "tags": ["messaging", "whatsapp", "telegram", "productivity", "shortcut", "chat"]
+}

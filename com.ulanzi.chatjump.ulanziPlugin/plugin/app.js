@@ -1,5 +1,5 @@
 /**
- * ChatJump - main service (HTML)
+ * ChatJump - main service (Node.js)
  *
  * Each key is a shortcut to one specific conversation in a messaging app.
  * Two actions share this main service:
@@ -10,10 +10,21 @@
  * logic handles both. Settings per key:
  *   { contactName, iconPath, phone }                       // whatsapp
  *   { contactName, iconPath, target, username, phone }     // telegram
+ *
+ * Why Node (not HTML): opening a chat means launching a custom URI scheme
+ * (whatsapp://, tg://) so the OS hands it to the installed desktop app.
+ * The host's $UD.openUrl only drives the built-in browser and rewrites
+ * custom schemes into http://, so it can never reach the app. Node lets us
+ * call the OS URL handler directly via child_process.
  */
+
+import { spawn } from 'node:child_process';
+import { UlanziApi } from './plugin-common-node/index.js';
+import { composeIconDataUri } from './badge.js';
 
 const MAIN_UUID = 'com.ulanzi.ulanzistudio.chatjump';
 
+const $UD = new UlanziApi();
 const ACTION_CACHES = {};
 
 $UD.connect(MAIN_UUID);
@@ -21,7 +32,7 @@ $UD.onConnected(() => {});
 
 $UD.onAdd((jsn) => {
   const ctx = jsn.context;
-  if (!ACTION_CACHES[ctx]) ACTION_CACHES[ctx] = new ChatContact(ctx);
+  if (!ACTION_CACHES[ctx]) ACTION_CACHES[ctx] = new ChatContact(ctx, $UD);
   applySettings(jsn);
 });
 
@@ -48,13 +59,14 @@ function applySettings(jsn) {
 }
 
 class ChatContact {
-  constructor(context) {
+  constructor(context, ud) {
     this.context = context;
+    this.$UD = ud;
     this.settings = {};
     // Derive the app from the action UUID (last segment: whatsapp | telegram).
     let uuid = MAIN_UUID;
     try {
-      uuid = $UD.decodeContext(context).uuid || MAIN_UUID;
+      uuid = ud.decodeContext(context).uuid || MAIN_UUID;
     } catch (e) {
       uuid = MAIN_UUID;
     }
@@ -69,25 +81,41 @@ class ChatContact {
   render() {
     const label = (this.settings.contactName || '').trim();
     if (this.settings.iconPath) {
-      $UD.setPathIcon(this.context, this.settings.iconPath, label);
+      // Photo set: overlay the app badge so the messenger stays recognizable.
+      let dataUri = null;
+      try {
+        dataUri = composeIconDataUri(this.settings.iconPath, this.app);
+      } catch (e) {
+        this.$UD.logMessage(`ChatJump: badge compose failed - ${e.message}`, 'error');
+      }
+      if (dataUri) {
+        this.$UD.setBaseDataIcon(this.context, dataUri, label);
+      } else {
+        // Undecodable photo (e.g. gif): show it as-is, without the badge.
+        this.$UD.setPathIcon(this.context, this.settings.iconPath, label);
+      }
     } else {
-      // No custom photo yet: keep the default action icon, overlay the name.
-      $UD.setStateIcon(this.context, 0, label);
+      // No custom photo: the default action icon already identifies the app.
+      this.$UD.setStateIcon(this.context, 0, label);
     }
   }
 
   open() {
-    const link = this.buildLink();
-    if (!link) {
-      $UD.showAlert(this.context);
-      $UD.toast('ChatJump: set a phone number or username in the settings first.');
+    const url = this.buildUrl();
+    if (!url) {
+      this.$UD.showAlert(this.context);
+      this.$UD.toast('ChatJump: set a phone number or username in the settings first.');
       return;
     }
-    // Custom URI scheme -> handed to the OS default handler (not a local file).
-    $UD.openUrl(link.url, false, link.param);
+    openExternal(url, (err) => {
+      if (err) {
+        this.$UD.showAlert(this.context);
+        this.$UD.logMessage(`ChatJump: failed to open ${url} - ${err.message}`, 'error');
+      }
+    });
   }
 
-  buildLink() {
+  buildUrl() {
     if (this.app === 'whatsapp') return this.buildWhatsApp();
     if (this.app === 'telegram') return this.buildTelegram();
     return null;
@@ -97,7 +125,7 @@ class ChatContact {
     const phone = digitsOnly(this.settings.phone);
     if (!phone) return null;
     // whatsapp://send?phone=<international number, digits only>
-    return { url: 'whatsapp://send', param: { phone } };
+    return `whatsapp://send?phone=${encodeURIComponent(phone)}`;
   }
 
   buildTelegram() {
@@ -106,15 +134,76 @@ class ChatContact {
       const phone = digitsOnly(this.settings.phone);
       if (!phone) return null;
       // tg://resolve?phone=<digits> (no leading +)
-      return { url: 'tg://resolve', param: { phone } };
+      return `tg://resolve?phone=${encodeURIComponent(phone)}`;
+    }
+    if (target === 'invite') {
+      const hash = parseTelegramInvite(this.settings.groupLink);
+      if (!hash) return null;
+      // tg://join?invite=<hash> — opens the private group; if already a member,
+      // Telegram just opens it instead of re-joining.
+      return `tg://join?invite=${encodeURIComponent(hash)}`;
     }
     const domain = (this.settings.username || '').trim().replace(/^@/, '');
     if (!domain) return null;
-    // tg://resolve?domain=<username>
-    return { url: 'tg://resolve', param: { domain } };
+    // tg://resolve?domain=<username> (works for public users, groups, channels)
+    return `tg://resolve?domain=${encodeURIComponent(domain)}`;
   }
 }
 
 function digitsOnly(value) {
   return (value || '').toString().replace(/\D/g, '');
+}
+
+/**
+ * Extract the invite hash from any Telegram private-group invite reference:
+ *   https://t.me/+AbCdEf...        -> AbCdEf...
+ *   https://t.me/joinchat/AbCdEf   -> AbCdEf
+ *   tg://join?invite=AbCdEf        -> AbCdEf
+ *   +AbCdEf / AbCdEf (raw)         -> AbCdEf
+ */
+function parseTelegramInvite(input) {
+  const s = (input || '').toString().trim();
+  if (!s) return null;
+  let m = s.match(/joinchat\/([^/?#\s]+)/i);
+  if (m) return m[1];
+  m = s.match(/[?&]invite=([^&#\s]+)/i);
+  if (m) return m[1];
+  m = s.match(/t\.me\/\+([^/?#\s]+)/i);
+  if (m) return m[1];
+  // Raw hash pasted directly (optionally with a leading +).
+  const raw = s.replace(/^\+/, '').split(/[?#]/)[0].replace(/\/+$/, '');
+  return raw || null;
+}
+
+/**
+ * Hand a URL (incl. custom URI schemes) to the OS default handler.
+ * Args are passed as an array (no shell) so contact data can't be interpreted
+ * as shell syntax. On Windows the `start` builtin needs cmd, with an empty
+ * title argument before the URL.
+ */
+function openExternal(url, done) {
+  let cmd;
+  let args;
+  const opts = { windowsHide: true, stdio: 'ignore' };
+  switch (process.platform) {
+    case 'darwin':
+      cmd = 'open';
+      args = [url];
+      break;
+    case 'win32':
+      cmd = 'cmd';
+      args = ['/c', 'start', '', url];
+      break;
+    default: // linux and others
+      cmd = 'xdg-open';
+      args = [url];
+      break;
+  }
+  try {
+    const child = spawn(cmd, args, opts);
+    child.on('error', (err) => done && done(err));
+    child.unref();
+  } catch (err) {
+    done && done(err);
+  }
 }

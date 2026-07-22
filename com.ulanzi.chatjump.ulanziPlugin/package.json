@@ -1,0 +1,16 @@
+{
+  "name": "chatjump-ulanzi-plugin",
+  "version": "1.0.0",
+  "description": "One-tap shortcuts to open favorite WhatsApp and Telegram chats on the Ulanzi deck.",
+  "type": "module",
+  "author": "Levi Nobrega",
+  "license": "MIT",
+  "scripts": {
+    "start": "node plugin/app.js"
+  },
+  "dependencies": {
+    "jpeg-js": "^0.4.4",
+    "pngjs": "^7.0.0",
+    "ws": "^8.18.0"
+  }
+}
