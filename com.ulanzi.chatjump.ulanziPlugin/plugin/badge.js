@@ -1,13 +1,18 @@
 /**
  * ChatJump - icon compositor
  *
- * Overlays a small app badge (WhatsApp / Telegram) on the top-right corner of
+ * Overlays a small app badge (WhatsApp / Telegram) on the bottom-right corner of
  * the user's contact photo, so a key that shows a face still tells you which
- * messenger it opens. Pure-JS (pngjs + jpeg-js), no native deps, so it runs
- * unchanged inside the Ulanzi Studio Node runtime on any platform.
+ * messenger it opens. Decodes PNG/JPEG/GIF in pure JS (pngjs + jpeg-js +
+ * omggif); for anything else (WebP, HEIC, or a file whose extension lies about
+ * its real content) it asks the OS to transcode to PNG first (sips on macOS,
+ * ImageMagick elsewhere). No native npm deps, so it runs unchanged inside the
+ * Ulanzi Studio Node runtime.
  */
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PNG } from 'pngjs';
@@ -21,27 +26,70 @@ const BADGE_MARGIN = 0.05;
 
 const BADGE_CACHE = {};
 
-function decodeImage(file) {
-  const ext = path.extname(file).toLowerCase();
-  const buf = readFileSync(file);
-  if (ext === '.png') {
-    const png = PNG.sync.read(buf);
-    return { width: png.width, height: png.height, data: png.data };
-  }
-  if (ext === '.jpg' || ext === '.jpeg') {
-    const img = jpeg.decode(buf, { useTArray: true, formatAsRGBA: true, maxMemoryUsageInMB: 512 });
-    return { width: img.width, height: img.height, data: Buffer.from(img.data) };
-  }
-  if (ext === '.gif') {
-    const reader = new GifReader(buf);
-    const w = reader.width;
-    const h = reader.height;
-    const out = Buffer.alloc(w * h * 4);
-    reader.decodeAndBlitFrameRGBA(0, out); // first frame is enough for a static key
-    return { width: w, height: h, data: out };
-  }
-  return null; // e.g. .webp -> caller falls back to the raw photo
+// Identify the real image format from the file header, not the extension —
+// downloaded photos are often WebP saved as ".jpg", which would crash jpeg-js.
+function sniff(buf) {
+  if (buf.length >= 8 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return 'png';
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'jpg';
+  if (buf.length >= 4 && buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46) return 'gif';
+  if (buf.length >= 12 && buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP') return 'webp';
+  if (buf.length >= 12 && buf.toString('ascii', 4, 8) === 'ftyp') return 'heic'; // HEIC/HEIF/AVIF family
+  return null;
 }
+
+function decodePngBuffer(buf) {
+  const png = PNG.sync.read(buf);
+  return { width: png.width, height: png.height, data: png.data };
+}
+
+function decodeImage(file) {
+  const buf = readFileSync(file);
+  const fmt = sniff(buf);
+  try {
+    if (fmt === 'png') return decodePngBuffer(buf);
+    if (fmt === 'jpg') {
+      const img = jpeg.decode(buf, { useTArray: true, formatAsRGBA: true, maxMemoryUsageInMB: 512 });
+      return { width: img.width, height: img.height, data: Buffer.from(img.data) };
+    }
+    if (fmt === 'gif') {
+      const reader = new GifReader(buf);
+      const w = reader.width;
+      const h = reader.height;
+      const out = Buffer.alloc(w * h * 4);
+      reader.decodeAndBlitFrameRGBA(0, out); // first frame is enough for a static key
+      return { width: w, height: h, data: out };
+    }
+  } catch (e) {
+    // fall through to OS transcode as a last resort
+  }
+  // WebP / HEIC / unknown / corrupt: let the OS transcode to PNG, then decode.
+  return decodeViaOS(file);
+}
+
+// Transcode any image the OS understands into a temp PNG and decode that.
+function decodeViaOS(file) {
+  const tmp = path.join(os.tmpdir(), `chatjump-${process.pid}-${Date.now()}.png`);
+  const attempts =
+    process.platform === 'darwin'
+      ? [['sips', ['-s', 'format', 'png', file, '--out', tmp]]]
+      : process.platform === 'win32'
+        ? [['magick', [file, tmp]]]
+        : [['magick', [file, tmp]], ['convert', [file, tmp]]];
+  try {
+    for (const [cmd, args] of attempts) {
+      try {
+        execFileSync(cmd, args, { stdio: 'ignore', timeout: 15000 });
+        if (existsSync(tmp)) return decodePngBuffer(readFileSync(tmp));
+      } catch (e) {
+        // try the next converter
+      }
+    }
+    return null;
+  } finally {
+    try { if (existsSync(tmp)) rmSync(tmp); } catch (e) { /* ignore */ }
+  }
+}
+
 
 // Bilinear resize of an RGBA image to (dw, dh).
 function resizeRGBA(src, dw, dh) {

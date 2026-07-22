@@ -16,7 +16,7 @@ $UD.onConnected(() => {
   );
 
   document.querySelector('#pickPhoto').addEventListener('click', () => {
-    $UD.selectFileDialog('image(*.png *.jpg *.jpeg *.gif)');
+    $UD.selectFileDialog('image(*.png *.jpg *.jpeg *.gif *.webp *.heic)');
   });
 });
 
